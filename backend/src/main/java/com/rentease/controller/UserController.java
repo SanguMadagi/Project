@@ -19,27 +19,9 @@ public class UserController {
 
     private final UserService userService;
 
-    // Get all users
     @GetMapping
     public ResponseEntity<List<User>> getAllUsers() {
         return ResponseEntity.ok(userService.getAllUsers());
-    }
-
-    // Get current user
-    @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')") // Only ADMIN can delete
-    public ResponseEntity<?> deleteUser(@PathVariable String id) {
-        return userService.deleteUserById(id)
-                ? ResponseEntity.ok("User deleted successfully")
-                : ResponseEntity.status(404).body("User not found");
-    }
-
-    @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')") // Only ADMIN can update
-    public ResponseEntity<?> updateUser(@PathVariable String id, @RequestBody User updatedUser) {
-        return userService.updateUserById(id, updatedUser)
-                ? ResponseEntity.ok("User updated successfully")
-                : ResponseEntity.status(404).body("User not found");
     }
 
     @GetMapping("/me")
@@ -49,5 +31,21 @@ public class UserController {
         return userService.getUserByEmail(email)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.status(404).build());
+    }
+
+    @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> updateUser(@PathVariable String id, @RequestBody User updatedUser) {
+        return userService.updateUserById(id, updatedUser)
+                ? ResponseEntity.ok("User updated successfully")
+                : ResponseEntity.status(404).body("User not found");
+    }
+
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> deleteUser(@PathVariable String id) {
+        return userService.deleteUserById(id)
+                ? ResponseEntity.ok("User deleted successfully")
+                : ResponseEntity.status(404).body("User not found");
     }
 }

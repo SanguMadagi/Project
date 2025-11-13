@@ -20,10 +20,11 @@ public class User {
 
     @Indexed(unique = true)
     private String email;
+
     private String password;
     private String phone;
 
     private Set<String> roles; // e.g. ["USER", "ADMIN"]
 
-    private boolean verified = false; // KYC or email verification later
+    private boolean verified = false; // KYC/email verification later
 }

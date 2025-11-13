@@ -5,7 +5,6 @@ import com.rentease.payload.RegisterRequest;
 import com.rentease.payload.JwtResponse;
 import com.rentease.service.UserService;
 import com.rentease.config.JwtUtil;
-
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -27,35 +26,31 @@ public class AuthController {
     private final AuthenticationManager authenticationManager;
     private final JwtUtil jwtUtils;
 
-    // Registration endpoint
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody RegisterRequest request) {
-        String token = userService.register(request); // handles user creation
+        String token = userService.register(request);
         return ResponseEntity.ok(new JwtResponse(token));
     }
 
-    // Login endpoint using Spring Security AuthenticationManager
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) {
         try {
-            Authentication authentication = authenticationManager.authenticate(
+            Authentication auth = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
                             loginRequest.getEmail(),
                             loginRequest.getPassword()
                     )
             );
 
-            SecurityContextHolder.getContext().setAuthentication(authentication);
+            SecurityContextHolder.getContext().setAuthentication(auth);
 
-            UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+            UserDetails userDetails = (UserDetails) auth.getPrincipal();
             Set<String> roles = userService.getRolesByEmail(userDetails.getUsername());
 
             String jwt = jwtUtils.generateToken(userDetails.getUsername(), roles);
             return ResponseEntity.ok(new JwtResponse(jwt));
         } catch (Exception e) {
-            return ResponseEntity
-                    .status(401)
-                    .body("Error: Invalid email or password");
+            return ResponseEntity.status(401).body("Error: Invalid email or password");
         }
     }
 }

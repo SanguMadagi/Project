@@ -19,42 +19,41 @@ public class UserService {
     private final JwtUtil jwtUtil;
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
+    // Register user
     public String register(RegisterRequest request) {
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new RuntimeException("Email already registered");
         }
 
         User user = new User();
-        user.setId(UUID.randomUUID().toString());
         user.setUsername(request.getName());
         user.setEmail(request.getEmail());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
 
-        // Assign roles
         Set<String> roles = request.getRoles();
         if (roles == null || roles.isEmpty()) {
             roles = new HashSet<>();
-            roles.add("USER"); // default role
+            roles.add("USER");
         }
         user.setRoles(roles);
 
         userRepository.save(user);
 
-        // generate JWT token
-        return jwtUtil.generateToken(user.getEmail());
+        return jwtUtil.generateToken(user.getEmail(), user.getRoles());
     }
 
-
-    public String login(LoginRequest req) {
-        User user = userRepository.findByEmailOrUsername(req.getEmail(), req.getUsername())
+    // Login user
+    public String login(LoginRequest request) {
+        User user = userRepository.findByEmailOrUsername(request.getEmail(), request.getUsername())
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        if (!passwordEncoder.matches(req.getPassword(), user.getPassword())) {
+        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
             throw new RuntimeException("Invalid credentials");
         }
 
-        return jwtUtil.generateToken(user.getEmail());
+        return jwtUtil.generateToken(user.getEmail(), user.getRoles());
     }
+
     // Get all users
     public List<User> getAllUsers() {
         return userRepository.findAll();
@@ -65,14 +64,22 @@ public class UserService {
         return userRepository.findByEmail(email);
     }
 
+    // Get roles for JWT
+    public Set<String> getRolesByEmail(String email) {
+        return userRepository.findByEmail(email)
+                .map(User::getRoles)
+                .orElse(Collections.emptySet());
+    }
+
     // Update user
-    public Optional<User> updateUser(String id, User updatedUser) {
+    public boolean updateUserById(String id, User updatedUser) {
         return userRepository.findById(id).map(user -> {
             user.setUsername(updatedUser.getUsername());
             user.setPhone(updatedUser.getPhone());
             user.setEmail(updatedUser.getEmail());
-            return userRepository.save(user);
-        });
+            userRepository.save(user);
+            return true;
+        }).orElse(false);
     }
 
     // Delete user

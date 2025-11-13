@@ -10,7 +10,9 @@ import org.springframework.security.web.authentication.AuthenticationSuccessHand
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 @Component
 public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
@@ -31,9 +33,10 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
 
         String email = (String) attributes.get("email");
         String name = (String) attributes.get("name");
-
+        Set<String> roles = new HashSet<>();
+        roles.add("USER");
         // Generate JWT
-        String token = jwtUtil.generateToken(email);
+        String token = jwtUtil.generateToken(email , roles);
 
         // Send token as JSON response
         response.setContentType("application/json");

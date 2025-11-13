@@ -36,7 +36,7 @@ public class OAuth2Controller {
                     return userRepository.save(newUser);
                 });
 
-        String token = jwtUtil.generateToken(email);
+        String token = jwtUtil.generateToken(email , user.getRoles());
 
         return "✅ Google Login Successful!\nJWT Token: " + token;
     }
